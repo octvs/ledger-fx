@@ -13,8 +13,15 @@ def main():
         type=str,
         default="gau",
     )
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="verbose output"
+    )
     parser.add_argument("dates", type=str, help="start date", nargs=2)
     args = parser.parse_args()
+
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG, force=True)
+
     dates = [datetime.strptime(x, "%Y-%m-%d").date() for x in args.dates]
 
     if dates[0] >= dates[1]:
@@ -30,10 +37,11 @@ def main():
         exit()
 
     for d0, d1 in chunk_query_period(missing):
-        logging.info(f"Querying data source for: {d0} - {d1}...")
+        logging.info(f"Querying data source for: {d0.date()} - {d1.date()}...")
         new_db = query_data(args.currency, d0, d1)
-        logging.info("Updating the db...")
-        db.update(new_db)
+        if new_db is not None:
+            logging.info("Updating the db...")
+            db.update(new_db)
 
 
 if __name__ == "__main__":

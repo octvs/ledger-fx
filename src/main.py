@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import logging
 import os
 from pathlib import Path
 
@@ -50,7 +50,7 @@ class PriceDB:
         self.write(updated_db)
 
     def check(self, dates):
-        print(f"Checking db for: {dates[0]} - {dates[1]}")
+        logging.info(f"Checking db for: {dates[0]} - {dates[1]}")
         period = pd.date_range(*dates, freq="d")
         db_query = self.read().reindex(period)
         missing_db = db_query[db_query.isna()].index
@@ -77,6 +77,12 @@ def query_data(curr, d0, d1):
     }
     response = client.post(URL, data=form_data)
     rows = HTMLParser(response.text).css("table.table > tbody > tr")
+
+    if not rows[1:]:
+        logging.info(
+            f"No data returned for {d0.strftime(API_DATEF)} - {d1.strftime(API_DATEF)}"
+        )
+        return None
 
     res = []
     for row in rows[1:]:
