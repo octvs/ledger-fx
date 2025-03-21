@@ -1,6 +1,6 @@
 import argparse
 import logging
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
 from main import PriceDB, chunk_query_period, query_data
 
@@ -28,6 +28,15 @@ def main():
         print("First date should be the start (earlier) date!")
         print("Switching them for you...")
         dates = dates[::-1]
+
+    if dates[0] >= date.today():
+        print(f"Start date ({dates[0]}) is in future.")
+        exit()
+
+    if dates[1] > date.today():
+        print(f"End date ({dates[1]}) is in future.")
+        print("Truncating to yesterday.")
+        dates[1] = date.today() - timedelta(days=1)
 
     db = PriceDB(args.currency)
     missing = db.check(dates)
