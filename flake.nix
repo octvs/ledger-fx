@@ -17,6 +17,7 @@
       runtimeDeps = with pkgs.python3Packages; [selectolax pandas httpx];
       buildDeps = with pkgs.python3Packages; [setuptools];
       selectolax = pkgs.python3Packages.buildPythonPackage rec {
+        # TODO: Upstream
         pname = "selectolax";
         version = "0.3.28";
         src = pkgs.python3Packages.fetchPypi {

@@ -13,6 +13,8 @@ API_CURRN = {"gau": "Gram Altın", "qau": "Çeyrek Altın"}
 
 # - If databse is empty
 # - Handle duplicates on database
+# Merge with other price query script
+# - That script also should update top to bottom
 
 
 def convert_deu_nr(nr: str):
@@ -23,9 +25,9 @@ class PriceDB:
     _DIR = Path(os.environ.get("LEDGER_PRICE_DB")).parent
     _CURR = {"gau": "GRAU", "qau": "QRAU"}
 
-    def __init__(self, curr):
-        self.curr = curr
-        self.fpath = PriceDB._DIR.joinpath(f"{curr}2try.ledger")
+    def __init__(self, src_curr, dst_curr):
+        self.curr = src_curr
+        self.fpath = PriceDB._DIR.joinpath(f"{src_curr}2{dst_curr}.ledger")
 
     def read(self):
         db = pd.read_csv(self.fpath, sep=" ", header=None)
