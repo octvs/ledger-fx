@@ -14,8 +14,21 @@
   }:
     flake-utils.lib.eachDefaultSystem (system: let
       pkgs = nixpkgs.legacyPackages.${system};
-      runtimeDeps = with pkgs.python3Packages; [selenium lxml] ++ [pkgs.geckodriver pkgs.firefox];
+      runtimeDeps = with pkgs.python3Packages; [selectolax pandas httpx];
       buildDeps = with pkgs.python3Packages; [setuptools];
+      selectolax = pkgs.python3Packages.buildPythonPackage rec {
+        pname = "selectolax"; # Replace with actual package name
+        version = "0.3.25"; # Replace with actual version
+
+        # Fetch from PyPI
+        src = pkgs.python3Packages.fetchPypi {
+          inherit pname version;
+          sha256 = "sha256-Va7jlP6dacgdLG3SRvwhqCKqjQMOPQ3B2S8uj8aLD1o="; # You'll get an error with the correct hash to put here
+        };
+
+        # If your package has no tests or you want to skip them
+        doCheck = false;
+      };
     in {
       packages = rec {
         altinkaynak = pkgs.python3Packages.buildPythonApplication {
