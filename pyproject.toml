@@ -1,0 +1,13 @@
+[project]
+name = "altinkaynak"
+authors = [{ name = "O. C. Taskin", email = "octvs@posteo.de" }]
+version = "0.1"
+dependencies = ["pandas", "selectolax", "httpx"]
+description = "scraper to query gold prices from altinkaynak"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
+altinkaynak = "main:main"
