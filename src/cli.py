@@ -2,7 +2,14 @@ import argparse
 import logging
 from datetime import date, datetime, timedelta
 
-from main import PriceDB, chunk_query_period, query_data
+from pricedb import PriceDB
+from sources.altinkaynak import query_data
+
+
+def chunk_query_period(missing_db):
+    # Separate into missing windows ones rather than min max
+    # Separate this query into 30 day groups
+    yield [x.to_pydatetime() for x in [missing_db.min(), missing_db.max()]]
 
 
 def main():

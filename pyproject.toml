@@ -1,5 +1,5 @@
 [project]
-name = "altinkaynak"
+name = "ledger-fx"
 authors = [{ name = "O. C. Taskin", email = "octvs@posteo.de" }]
 version = "0.1"
 dependencies = ["pandas", "selectolax", "httpx"]
@@ -10,4 +10,4 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project.scripts]
-altinkaynak = "cli:main"
+ledger-fx = "cli:main"

@@ -28,19 +28,19 @@
       };
     in {
       packages = rec {
-        altinkaynak = pkgs.python3Packages.buildPythonApplication {
-          pname = "altinkaynak";
+        ledger-fx = pkgs.python3Packages.buildPythonApplication {
+          pname = "ledger-fx";
           version = "0.1";
           pyproject = true;
           propagatedBuildInputs = runtimeDeps ++ buildDeps;
           src = ./.;
         };
-        default = altinkaynak;
+        default = ledger-fx;
       };
 
       devShells.default = pkgs.mkShell {buildInputs = runtimeDeps;};
     })
     // {
-      overlays.default = final: prev: {altinkaynak = self.packages.${prev.system}.default;};
+      overlays.default = final: prev: {ledger-fx = self.packages.${prev.system}.default;};
     };
 }
