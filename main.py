@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
+import argparse
+import logging
 import os
-from datetime import date, datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 import httpx
@@ -11,39 +13,57 @@ from selectolax.parser import HTMLParser
 URL = "https://www.altinkaynak.com/Altin/Arsiv"
 API_DATEF = "%d-%m-%Y"
 API_CURRN = {"gau": "Gram Altın", "qau": "Çeyrek Altın"}
-DB_DIR = Path(os.environ.get("LEDGER_PRICE_DB")).parent
+
+# - If databse is empty
+# - Handle duplicates on database
 
 
 def convert_deu_nr(nr: str):
     return float(nr.replace(".", "").replace(",", "."))
 
 
-def read_price_db(curr="gau"):
-    db_fpath = DB_DIR.joinpath(f"{curr}2try.ledger")
-    db = pd.read_csv(db_fpath, sep=" ", header=None)
-    db = db.drop([0, 2], axis=1)
-    db = db.set_axis(["date", "price"], axis=1)
-    db["price"] = db["price"].str.slice(1).astype(float)
-    db["date"] = pd.to_datetime(db["date"])
-    return db
+class PriceDB:
+    _DIR = Path(os.environ.get("LEDGER_PRICE_DB")).parent
+    _CURR = {"gau": "GRAU", "qau": "QRAU"}
+
+    def __init__(self, curr):
+        self.curr = curr
+        self.fpath = PriceDB._DIR.joinpath(f"{curr}2try.ledger")
+
+    def read(self):
+        db = pd.read_csv(self.fpath, sep=" ", header=None)
+        db[1] = pd.to_datetime(db[1])
+        db = db.set_index(1)[3]
+        db = db.str.slice(1).astype(float)
+        return db
+
+    def write(self, df: pd.DataFrame):
+        df = "₺" + df.astype(str)
+        df = df.rename("p").to_frame()
+        df[0], df[1] = "P", PriceDB._CURR[self.curr]
+        df = df.reset_index(names="d").reindex(columns=[0, "d", 1, "p"])
+        df.to_csv(self.fpath, sep=" ", header=False, index=False)
+
+    def update(self, new_db):
+        curr_db = self.read()
+        new_ind = pd.concat(x.index.to_series() for x in [curr_db, new_db])
+        new_ind = new_ind[~new_ind.duplicated()].sort_values()
+        updated_db = curr_db.reindex(new_ind)
+        updated_db.update(new_db)
+        self.write(updated_db)
+
+    def check(self, dates):
+        print(f"Checking db for: {dates[0]} - {dates[1]}")
+        period = pd.date_range(*dates, freq="d")
+        db_query = self.read().reindex(period)
+        missing_db = db_query[db_query.isna()].index
+        return missing_db
 
 
-def check_database(curr, date0, date1):
-    period = pd.date_range(date0, date1 - timedelta(1), freq="d")
-    db_query = (
-        read_price_db(curr)
-        .set_index("date")
-        .reindex(period)
-        .reset_index(names="date")
-    )
-    print(db_query)
-    missing_db = db_query[~db_query["price"].notna()]
-    if missing_db.empty:
-        exit("Already updated")
-    # Separate into missing ones rather than min max
-    _date0 = missing_db["date"].min()
-    _date1 = missing_db["date"].max()
-    update_database(curr, _date0.to_pydatetime(), _date1.to_pydatetime())
+def chunk_query_period(missing_db):
+    # Separate into missing windows ones rather than min max
+    # Separate this query into 30 day groups
+    yield [x.to_pydatetime() for x in [missing_db.min(), missing_db.max()]]
 
 
 def query_data(curr, d0, d1):
@@ -64,38 +84,44 @@ def query_data(curr, d0, d1):
     res = []
     for row in rows[1:]:
         row = [x.text() for x in row.css("td")]
-        _date = datetime.strptime(row[0], "%d.%m.%Y").date()
+        _date = pd.to_datetime(row[0], format="%d.%m.%Y")
         low, high = [convert_deu_nr(x) for x in row[-2:]]
         res.append([_date, round((low + high) / 2, 2)])
-    return pd.DataFrame(res, columns=["date", "price"])
-
-
-def update_database(curr, d0, d1):
-    # Func: Chunk to max 30 days
-    new = query_data(curr, d0, d1)
-    write_price_db(new, curr)
-    # Func: Write back to db
-    return None
-
-
-def write_price_db(new_data, curr="gau"):
-    curr_db = read_price_db(curr)
-    new_db = pd.concat([curr_db, new_data])
-    # Deduplicate?
-    new_db["date"] = pd.to_datetime(new_db["date"])
-    new_db = new_db.sort_values(by="date")
-    new_db["price"] = "₺" + new_db["price"].astype(str)
-    new_db[0] = "P"
-    new_db[2] = curr.upper()[0] + "R" + curr.upper()[1:]
-    new_db = new_db.reindex(columns=[0, "date", 2, "price"])
-    db_fpath = DB_DIR.joinpath(f"{curr}2try.ledger")
-    new_db.to_csv(db_fpath, sep=" ", header=False, index=False)
+    return pd.DataFrame(res).set_index(0)[1]
 
 
 def main():
-    currency = "gau"
-    print(check_database(currency, date(2025, 3, 1), date(2025, 3, 21)))
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-c",
+        "--currency",
+        type=str,
+        default="gau",
+    )
+    parser.add_argument("dates", type=str, help="start date", nargs=2)
+    args = parser.parse_args()
+    dates = [datetime.strptime(x, "%Y-%m-%d").date() for x in args.dates]
+
+    if dates[0] >= dates[1]:
+        print("First date should be the start (earlier) date!")
+        print("Switching them for you...")
+        dates = dates[::-1]
+
+    db = PriceDB(args.currency)
+    missing = db.check(dates)
+
+    if missing.empty:
+        print("Database is already up to date.")
+        exit()
+
+    for d0, d1 in chunk_query_period(missing):
+        logging.info(f"Querying data source for: {d0} - {d1}...")
+        new_db = query_data(args.currency, d0, d1)
+        logging.info("Updating the db...")
+        print(new_db)
+        db.update(new_db)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     main()
