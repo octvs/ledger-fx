@@ -38,7 +38,9 @@ def check_database(curr, date0, date1):
     )
     print(db_query)
     missing_db = db_query[~db_query["price"].notna()]
-    # if there are daets left
+    if missing_db.empty:
+        exit("Already updated")
+    # Separate into missing ones rather than min max
     _date0 = missing_db["date"].min()
     _date1 = missing_db["date"].max()
     update_database(curr, _date0.to_pydatetime(), _date1.to_pydatetime())
