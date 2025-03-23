@@ -72,9 +72,24 @@ def query_data(curr, d0, d1):
 
 def update_database(curr, d0, d1):
     # Func: Chunk to max 30 days
-    query_data(curr, d0, d1)
+    new = query_data(curr, d0, d1)
+    write_price_db(new, curr)
     # Func: Write back to db
     return None
+
+
+def write_price_db(new_data, curr="gau"):
+    curr_db = read_price_db(curr)
+    new_db = pd.concat([curr_db, new_data])
+    # Deduplicate?
+    new_db["date"] = pd.to_datetime(new_db["date"])
+    new_db = new_db.sort_values(by="date")
+    new_db["price"] = "₺" + new_db["price"].astype(str)
+    new_db[0] = "P"
+    new_db[2] = curr.upper()[0] + "R" + curr.upper()[1:]
+    new_db = new_db.reindex(columns=[0, "date", 2, "price"])
+    db_fpath = DB_DIR.joinpath(f"{curr}2try.ledger")
+    new_db.to_csv(db_fpath, sep=" ", header=False, index=False)
 
 
 def main():
