@@ -10,4 +10,4 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project.scripts]
-altinkaynak = "main:main"
+altinkaynak = "cli:main"

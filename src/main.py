@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 
-import argparse
-import logging
 import os
-from datetime import datetime
 from pathlib import Path
 
 import httpx
@@ -88,40 +85,3 @@ def query_data(curr, d0, d1):
         low, high = [convert_deu_nr(x) for x in row[-2:]]
         res.append([_date, round((low + high) / 2, 2)])
     return pd.DataFrame(res).set_index(0)[1]
-
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-c",
-        "--currency",
-        type=str,
-        default="gau",
-    )
-    parser.add_argument("dates", type=str, help="start date", nargs=2)
-    args = parser.parse_args()
-    dates = [datetime.strptime(x, "%Y-%m-%d").date() for x in args.dates]
-
-    if dates[0] >= dates[1]:
-        print("First date should be the start (earlier) date!")
-        print("Switching them for you...")
-        dates = dates[::-1]
-
-    db = PriceDB(args.currency)
-    missing = db.check(dates)
-
-    if missing.empty:
-        print("Database is already up to date.")
-        exit()
-
-    for d0, d1 in chunk_query_period(missing):
-        logging.info(f"Querying data source for: {d0} - {d1}...")
-        new_db = query_data(args.currency, d0, d1)
-        logging.info("Updating the db...")
-        print(new_db)
-        db.update(new_db)
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    main()
