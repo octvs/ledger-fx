@@ -17,16 +17,12 @@
       runtimeDeps = with pkgs.python3Packages; [selectolax pandas httpx];
       buildDeps = with pkgs.python3Packages; [setuptools];
       selectolax = pkgs.python3Packages.buildPythonPackage rec {
-        pname = "selectolax"; # Replace with actual package name
-        version = "0.3.25"; # Replace with actual version
-
-        # Fetch from PyPI
+        pname = "selectolax";
+        version = "0.3.28";
         src = pkgs.python3Packages.fetchPypi {
           inherit pname version;
-          sha256 = "sha256-Va7jlP6dacgdLG3SRvwhqCKqjQMOPQ3B2S8uj8aLD1o="; # You'll get an error with the correct hash to put here
+          sha256 = "iuPalyYbV77VH6mwPEiJhfbc/y4uREcaqfXiwXzBxFo=";
         };
-
-        # If your package has no tests or you want to skip them
         doCheck = false;
       };
     in {
