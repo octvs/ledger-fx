@@ -3,17 +3,19 @@ import logging
 import os
 from datetime import date, datetime, timedelta
 
+import pandas as pd
+
 from pricedb import PriceDB
 from sources.altinkaynak import query_data
 
 
-def chunk_query_period(missing_db):
+def chunk_query_period(period: pd.Series) -> tuple[date, date]:
     # Separate into missing windows ones rather than min max
     # Separate this query into 30 day groups
-    yield [x.to_pydatetime() for x in [missing_db.min(), missing_db.max()]]
+    yield (x.to_pydatetime().date() for x in [period.min(), period.max()])
 
 
-def query(db, dates):
+def query(db, dates) -> None:
     dates = [datetime.strptime(x, "%Y%m%d").date() for x in dates]
 
     if dates[0] >= date.today():
@@ -37,14 +39,14 @@ def query(db, dates):
         exit()
 
     for d0, d1 in chunk_query_period(missing):
-        logging.info(f"Querying data source for: {d0.date()} - {d1.date()}...")
+        logging.info(f"Querying data source for: {d0} - {d1}...")
         new_db = query_data(db.curr, d0, d1)
         if new_db is not None:
             logging.info("Updating db...")
             db.update(new_db)
 
 
-def parse_arguments():
+def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
 
     # Flags

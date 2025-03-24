@@ -16,6 +16,7 @@
       pkgs = nixpkgs.legacyPackages.${system};
       runtimeDeps = with pkgs.python3Packages; [selectolax pandas httpx];
       buildDeps = with pkgs.python3Packages; [setuptools];
+      devDeps = with pkgs.python3Packages; [pandas-stubs mypy];
       selectolax = pkgs.python3Packages.buildPythonPackage rec {
         # TODO: Upstream
         pname = "selectolax";
@@ -38,7 +39,7 @@
         default = ledger-fx;
       };
 
-      devShells.default = pkgs.mkShell {buildInputs = runtimeDeps;};
+      devShells.default = pkgs.mkShell {buildInputs = runtimeDeps ++ devDeps;};
     })
     // {
       overlays.default = final: prev: {ledger-fx = self.packages.${prev.system}.default;};
