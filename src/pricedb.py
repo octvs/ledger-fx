@@ -6,15 +6,19 @@ import pandas as pd
 
 
 class PriceDB:
-    _DIR = Path(os.environ.get("LEDGER_PRICE_DB")).parent
+    _DIR = Path(os.environ.get("LEDGER_PRICE_DB")).parent.joinpath("prices")
     _CURR = {"gau": "GRAU", "qau": "QRAU", "try": "₺", "eur": "€"}
 
     def __init__(self, src_curr, dst_curr):
         self.curr = src_curr
         self.dest_curr = dst_curr
         self.fpath = PriceDB._DIR.joinpath(f"{src_curr}2{dst_curr}.ledger")
+        if not self.fpath.exists():
+            self.fpath.touch()
 
     def read(self):
+        if self.fpath.stat().st_size == 0:
+            return pd.Series([])
         db = pd.read_csv(self.fpath, sep=" ", header=None)
         db[1] = pd.to_datetime(db[1])
         db = db.set_index(1)[3]
@@ -42,3 +46,12 @@ class PriceDB:
         db_query = self.read().reindex(period)
         missing_db = db_query[db_query.isna()].index
         return missing_db
+
+    def __str__(self):
+        msg = f"Price database of {self.curr} to {self.dest_curr}"
+        db = self.read()
+        if db.empty:
+            return msg + " with no current entry"
+        return (
+            msg + f" between {db.index.min().date()} - {db.index.max().date()}"
+        )
