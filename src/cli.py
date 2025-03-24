@@ -13,7 +13,7 @@ def chunk_query_period(missing_db):
     yield [x.to_pydatetime() for x in [missing_db.min(), missing_db.max()]]
 
 
-def query(src, dst, dates):
+def query(db, dates):
     dates = [datetime.strptime(x, "%Y%m%d").date() for x in dates]
 
     if dates[0] >= date.today():
@@ -30,7 +30,6 @@ def query(src, dst, dates):
         logging.debug("Switching them for you...")
         dates = dates[::-1]
 
-    db = PriceDB(src, dst)
     missing = db.check(dates)
 
     if missing.empty:
@@ -39,39 +38,70 @@ def query(src, dst, dates):
 
     for d0, d1 in chunk_query_period(missing):
         logging.info(f"Querying data source for: {d0.date()} - {d1.date()}...")
-        new_db = query_data(src, d0, d1)
+        new_db = query_data(db.curr, d0, d1)
         if new_db is not None:
             logging.info("Updating db...")
             db.update(new_db)
 
 
-def main():
+def parse_arguments():
     parser = argparse.ArgumentParser()
+
+    # Flags
     parser.add_argument(
-        "-v", "--verbose", action="store_true", help="verbose output"
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="verbose output",
     )
     parser.add_argument(
-        "-c", "--currency", type=str, default="gau", help="source currency"
+        "-c",
+        "--src-currency",
+        type=str,
+        default="try",
+        help="source currency",
+        metavar="CURRENCY",
     )
     parser.add_argument(
         "-d",
         "--dst-currency",
         type=str,
-        default="try",
+        default="eur",
         help="destination currency",
+        metavar="CURRENCY",
     )
 
-    cmds = parser.add_subparsers(title="commands", dest="f")
-    cmds.add_parser(
-        "list", aliases=["l"], help="display the price database"
-    ).set_defaults(f=lambda db: print(db))
-    cmds.add_parser(
-        "edit", aliases=["e"], help="open the db on $EDITOR"
-    ).set_defaults(f=lambda db: os.system(f"$EDITOR {db.fpath}"))
-    # cmds.add_parser(
-    #     "query", aliases=["e"], help="query data from sources"
-    # ).set_defaults(f=lambda cat: _edit(shopping, cat))
-    # parser.add_argument("dates", type=str, help="start date", nargs=2)
+    # Subcommands
+    cmds = parser.add_subparsers(title="commands", dest="cmd")
+    edit_parser = cmds.add_parser(
+        "edit",
+        aliases=["e"],
+        help="open the db on $EDITOR",
+    )
+    list_parser = cmds.add_parser(
+        "list",
+        aliases=["l"],
+        help="display the price database",
+    )
+    query_parser = cmds.add_parser(
+        "query",
+        aliases=["q"],
+        help="query data from sources",
+    )
+
+    # Subcomand default actions
+    edit_parser.set_defaults(cmd=lambda db: os.system(f"$EDITOR {db.fpath}"))
+    list_parser.set_defaults(cmd=lambda db: print(db))
+    query_parser.set_defaults(cmd=lambda db: query(db, args.dates))
+
+    # Subcommand specific arguments
+    query_parser.add_argument(
+        "dates",
+        type=str,
+        help="start and end date in YYYYMMDD format",
+        nargs=2,
+        metavar="DATE",
+    )
 
     args = parser.parse_args()
 
@@ -79,11 +109,16 @@ def main():
         logging.basicConfig(level=logging.DEBUG, force=True)
     logging.debug(f"Received args from shell {args}")
 
-    if args.f is None:
-        args.f = lambda db: print(db)
+    if args.cmd is None:
+        args.cmd = lambda db: print(db)
 
-    db = PriceDB(args.currency, args.dst_currency)
-    args.f(db)
+    return args
+
+
+def main():
+    args = parse_arguments()
+    db = PriceDB(args.src_currency, args.dst_currency)
+    args.cmd(db)
 
 
 if __name__ == "__main__":
