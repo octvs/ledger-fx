@@ -3,19 +3,10 @@ import logging
 import os
 from datetime import date, datetime, timedelta
 
-import pandas as pd
-
 from pricedb import PriceDB
-from sources.altinkaynak import query_data
+from sources import SourceFactory
 
 
-def chunk_query_period(period: pd.Series) -> tuple[date, date]:
-    # Separate into missing windows ones rather than min max
-    # Separate this query into 30 day groups
-    yield (x.to_pydatetime().date() for x in [period.min(), period.max()])
-
-
-def query(db, dates) -> None:
 def clean_date_input(dates):
     dates = [datetime.strptime(x, "%Y%m%d").date() for x in dates]
 
@@ -39,13 +30,19 @@ def query(db, dates) -> None:
     if missing.empty:
         logging.info("Database is already up to date.")
         exit()
+    logging.info(
+        f"Missing: {missing.min().date()} - {missing.max().date()}..."
+    )
+    available_sources = SourceFactory().get(db.curr, db.dest_curr)
 
-    for d0, d1 in chunk_query_period(missing):
-        logging.info(f"Querying data source for: {d0} - {d1}...")
-        new_db = query_data(db.curr, d0, d1)
-        if new_db is not None:
-            logging.info("Updating db...")
-            db.update(new_db)
+    if len(available_sources) > 1:
+        print("Choosing a source is not implemented yet! Using first.")
+
+    source = available_sources[0]
+    new_db = source.query_data(missing)
+    if not new_db.empty:
+        logging.info("Updating db...")
+        db.update(new_db)
 
 
 def parse_arguments() -> argparse.Namespace:
