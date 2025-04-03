@@ -13,8 +13,6 @@ class PriceDB:
         self.curr = src_curr
         self.dest_curr = dst_curr
         self.fpath = PriceDB._DIR.joinpath(f"{src_curr}2{dst_curr}.ledger")
-        if not self.fpath.exists():
-            self.fpath.touch()
 
     def read(self):
         if self.fpath.stat().st_size == 0:
@@ -34,7 +32,9 @@ class PriceDB:
 
     def update(self, new_db):
         curr_db = self.read()
-        new_ind = pd.concat(x.index.to_series() for x in [curr_db, new_db])
+        new_ind = pd.concat(
+            x.index.to_series() for x in [curr_db, new_db] if not x.empty
+        )
         new_ind = new_ind[~new_ind.duplicated()].sort_values()
         updated_db = curr_db.reindex(new_ind)
         updated_db.update(new_db)
