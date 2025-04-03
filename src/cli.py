@@ -62,7 +62,7 @@ def parse_arguments() -> argparse.Namespace:
         "-c",
         "--src-currency",
         type=str,
-        default="try",
+        default="eur",
         help="source currency",
         metavar="CURRENCY",
     )
@@ -70,7 +70,7 @@ def parse_arguments() -> argparse.Namespace:
         "-d",
         "--dst-currency",
         type=str,
-        default="eur",
+        default="try",
         help="destination currency",
         metavar="CURRENCY",
     )
@@ -110,7 +110,7 @@ def parse_arguments() -> argparse.Namespace:
     args = parser.parse_args()
 
     if args.verbose:
-        logging.basicConfig(level=logging.DEBUG, force=True)
+        logging.basicConfig(level=logging.INFO, force=True)
     logging.debug(f"Received args from shell {args}")
 
     if args.cmd is None:
