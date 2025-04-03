@@ -2,6 +2,16 @@
 
 ## Inbox
 
+- [ ] Missing dates at upstream
+  - [ ] To tackle repeated queries for lacking dates at web, sources can/should
+        fill blanks upon returning a successful query so that we don't
+        repeatedly query dates that don't exist
+    - But this might be a wrong thing to do if we have multiple sources for
+      same conversion, since some other can provide the correct value later to
+      be filled
+- [ ] Verbosity level support on Argparser
+  - [ ] `-v` for INFO and `-vv` for DEBUG
+
 ## Backlog
 
 - [-] Add type hints for
