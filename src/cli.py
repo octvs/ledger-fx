@@ -16,24 +16,26 @@ def chunk_query_period(period: pd.Series) -> tuple[date, date]:
 
 
 def query(db, dates) -> None:
+def clean_date_input(dates):
     dates = [datetime.strptime(x, "%Y%m%d").date() for x in dates]
 
     if dates[0] >= date.today():
         logging.info(f"Start date ({dates[0]}) is in future.")
         exit()
-
     if dates[1] > date.today():
         logging.info(f"End date ({dates[1]}) is in future.")
         logging.debug("Truncating to yesterday.")
         dates[1] = date.today() - timedelta(days=1)
-
     if dates[0] >= dates[1]:
         logging.info("First date should be the start (earlier) date!")
         logging.debug("Switching them for you...")
         dates = dates[::-1]
+    return dates
 
+
+def query(db, dates) -> None:
+    dates = clean_date_input(dates)
     missing = db.check(dates)
-
     if missing.empty:
         logging.info("Database is already up to date.")
         exit()
