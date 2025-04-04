@@ -2,6 +2,10 @@
 
 ## Inbox
 
+- [ ] Bug when period is fully non-existant on web
+  ```sh
+  ledger-fx -v -c eur -d try q 20250301 20250302
+  ```
 - [ ] Missing dates at upstream
   - [ ] To tackle repeated queries for lacking dates at web, sources can/should
         fill blanks upon returning a successful query so that we don't
