@@ -4,7 +4,7 @@ import httpx
 import pandas as pd
 from selectolax.parser import HTMLParser
 
-from sources import Source
+from ledger_fx.sources import Source
 
 
 def convert_deu_nr(nr: str):

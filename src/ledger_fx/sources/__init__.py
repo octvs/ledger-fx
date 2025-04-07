@@ -1,6 +1,5 @@
 import logging
 from abc import ABC
-from datetime import date, timedelta
 
 import pandas as pd
 
