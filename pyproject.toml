@@ -10,4 +10,4 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project.scripts]
-ledger-fx = "ledger_fx.cli:main"
+ledger-fx = "ledger_fx.__main__:main"

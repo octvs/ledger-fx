@@ -3,8 +3,14 @@ import logging
 import os
 from datetime import date, datetime, timedelta
 
-from ledger_fx.pricedb import PriceDB
-from ledger_fx.sources import SourceFactory
+# Make CLI runnable from source tree with `python src/package`
+if not __package__:
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from ledger_fx import PriceDB, SourceFactory
 
 
 def clean_date_input(dates):

@@ -1,6 +1,6 @@
 import pandas as pd
 
-from ledger_fx.sources import Source
+from .base import Source
 
 
 class ECB(Source):
