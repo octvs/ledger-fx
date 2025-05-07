@@ -3,13 +3,6 @@ import logging
 import os
 from datetime import date, datetime, timedelta
 
-# Make CLI runnable from source tree with `python src/package`
-if not __package__:
-    import sys
-    from pathlib import Path
-
-    sys.path.insert(0, str(Path(__file__).parent.parent))
-
 from ledger_fx import PriceDB, SourceFactory
 
 
@@ -49,6 +42,8 @@ def query(db, dates) -> None:
     if not new_db.empty:
         logging.info("Updating db...")
         db.update(new_db)
+    else:
+        logging.info("Nothing to update.")
 
 
 def parse_arguments() -> argparse.Namespace:
