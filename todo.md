@@ -2,6 +2,9 @@
 
 ## Inbox
 
+- [ ] Query with a single date
+  - If a user provides a single date from future, update the database up until
+    that date, maybe with a confirmation from the user
 - [ ] Bug when period is fully non-existant on web
   ```sh
   ledger-fx -v -c eur -d try q 20250301 20250302
@@ -31,5 +34,3 @@
 ## Done
 
 - [x] Generalize to EUR2TRY conversion
-  - Merge with other price query script
-    - That script also should update top to bottom
