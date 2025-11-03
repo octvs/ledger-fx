@@ -53,7 +53,8 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "-v",
         "--verbose",
-        action="store_true",
+        action="count",
+        default=0,
         help="verbose output",
     )
     parser.add_argument(
@@ -107,8 +108,10 @@ def parse_arguments() -> argparse.Namespace:
 
     args = parser.parse_args()
 
-    if args.verbose:
-        logging.basicConfig(level=logging.INFO, force=True)
+    if args.verbose > 0:
+        # default: WARNING, -v: INFO , -vv: DEBUG
+        logging.basicConfig(level=(30 - args.verbose * 10), force=True)
+
     logging.debug(f"Received args from shell {args}")
 
     if args.cmd is None:
@@ -124,5 +127,4 @@ def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
     main()

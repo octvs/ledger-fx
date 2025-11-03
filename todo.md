@@ -13,8 +13,6 @@
     - But this might be a wrong thing to do if we have multiple sources for
       same conversion, since some other can provide the correct value later to
       be filled
-- [ ] Verbosity level support on Argparser
-  - [ ] `-v` for INFO and `-vv` for DEBUG
 
 ## Backlog
 
@@ -30,6 +28,5 @@
 
 ## Done
 
+- [x] Verbosity level support on Argparser
 - [x] Generalize to EUR2TRY conversion
-  - Merge with other price query script
-    - That script also should update top to bottom
