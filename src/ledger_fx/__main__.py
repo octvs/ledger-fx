@@ -102,7 +102,7 @@ def parse_arguments() -> argparse.Namespace:
         "dates",
         type=str,
         help="start and end date in YYYYMMDD format",
-        nargs=2,
+        nargs="+",
         metavar="DATE",
     )
 
@@ -113,6 +113,10 @@ def parse_arguments() -> argparse.Namespace:
         logging.basicConfig(level=(30 - args.verbose * 10), force=True)
 
     logging.debug(f"Received args from shell {args}")
+
+    if len(args.dates) == 1:
+        logging.debug("Adding today's date as the second date argument.")
+        args.dates += [date.today().strftime("%Y%m%d")]
 
     if args.cmd is None:
         args.cmd = lambda db: print(db)
