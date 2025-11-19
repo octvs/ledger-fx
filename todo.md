@@ -23,6 +23,7 @@
 - [ ] Rewrite using data service
   - [ ] Rewrite using the data service given by altinkaynak as seen in
         github:mustafa-mercanli/altinkaynak
+  - [ ] Drop selectolax dependency
 
 ## Implementation
 
