@@ -3,45 +3,36 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    systems.url = "github:nix-systems/default";
   };
 
-  outputs = {
-    self,
-    nixpkgs,
-    flake-utils,
-    ...
-  }:
-    flake-utils.lib.eachDefaultSystem (system: let
-      pkgs = nixpkgs.legacyPackages.${system};
-      runtimeDeps = with pkgs.python3Packages; [selectolax pandas httpx];
-      buildDeps = with pkgs.python3Packages; [setuptools];
-      devDeps = with pkgs.python3Packages; [pandas-stubs mypy];
-      selectolax = pkgs.python3Packages.buildPythonPackage rec {
-        # TODO: Upstream
-        pname = "selectolax";
-        version = "0.3.28";
-        src = pkgs.python3Packages.fetchPypi {
-          inherit pname version;
-          sha256 = "iuPalyYbV77VH6mwPEiJhfbc/y4uREcaqfXiwXzBxFo=";
-        };
-        doCheck = false;
-      };
-    in {
-      packages = rec {
-        ledger-fx = pkgs.python3Packages.buildPythonApplication {
-          pname = "ledger-fx";
-          version = "0.1";
+  outputs = inputs:
+    inputs.flake-parts.lib.mkFlake {inherit inputs;} ({...}: {
+      systems = import inputs.systems;
+      perSystem = {pkgs, ...}: let
+        dependencies = with pkgs.python3.pkgs; [selectolax pandas httpx];
+        selectolax = pkgs.python3Packages.buildPythonPackage rec {
+          # TODO: Upstream
+          pname = "selectolax";
+          version = "0.3.28";
           pyproject = true;
-          propagatedBuildInputs = runtimeDeps ++ buildDeps;
-          src = ./.;
+          src = pkgs.python3Packages.fetchPypi {
+            inherit pname version;
+            sha256 = "iuPalyYbV77VH6mwPEiJhfbc/y4uREcaqfXiwXzBxFo=";
+          };
+          build-system = with pkgs.python3.pkgs; [setuptools];
+          doCheck = false;
         };
-        default = ledger-fx;
+      in {
+        packages.default = pkgs.python3Packages.buildPythonApplication {
+          pname = "ledger-fx";
+          version = "0-unstable";
+          pyproject = true;
+          src = ./.;
+          build-system = with pkgs.python3.pkgs; [setuptools];
+          inherit dependencies;
+        };
       };
-
-      devShells.default = pkgs.mkShell {buildInputs = runtimeDeps ++ devDeps;};
-    })
-    // {
-      overlays.default = final: prev: {ledger-fx = self.packages.${prev.system}.default;};
-    };
+    });
 }
