@@ -2,6 +2,13 @@
 
 ## Inbox
 
+- [ ] Query non-contiguous periods separately.
+  - Example: If
+    - 02.10 missing
+    - 03.10-10.10 present
+    - Query done on 15.10 between 01.10-15.10, this will query 02.10-15.10, but
+      we should break this non-contiguous period and query them separately.
+      Hence 02.10-03.10 and 10.10-15.10.
 - [ ] Bug when period is fully non-existant on web
   ```sh
   ledger-fx -v -c eur -d try q 20250301 20250302
