@@ -2,7 +2,7 @@
 name = "ledger-fx"
 authors = [{ name = "O. C. Taskin", email = "octvs@posteo.de" }]
 version = "0.1"
-dependencies = ["pandas", "selectolax", "httpx"]
+dependencies = ["pandas", "selenium", "lxml", "beautifulsoup4"]
 description = "scraper to query gold prices from altinkaynak"
 
 [build-system]
