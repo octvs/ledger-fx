@@ -29,6 +29,12 @@ class PriceDB:
         _db[1] = pd.to_datetime(_db[1])
         db = _db.set_index(1)[3]
         db = db.str.slice(1).astype(float)
+        dup_indexes = db.index.duplicated()
+        if dup_indexes.any():
+            logging.error(
+                f"There are duplicates of rows:\n---\n{db[dup_indexes]}\n---\nAborting!"
+            )
+            exit()
         return db
 
     def write(self, df: pd.Series) -> None:
