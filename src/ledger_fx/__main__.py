@@ -34,6 +34,9 @@ def query(db, dates) -> None:
     )
     available_sources = SourceFactory().get(db.curr, db.dest_curr)
 
+    if not available_sources:
+        exit(f"No sources available for {db.curr} to {db.dest_curr}.")
+
     if len(available_sources) > 1:
         print("Choosing a source is not implemented yet! Using first.")
 
